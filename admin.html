@@ -120,15 +120,19 @@
     let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) { location.href = 'login.html'; return; }
-      // تحقق من صلاحية المشرف
-      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-      if (!adminDoc.exists()) {
-        alert('ليس لديك صلاحية الدخول للوحة التحكم');
-        location.href = 'index.html';
-        return;
-      }
-      currentUser = user;
+  if (!user) { location.href = 'login.html'; return; }
+  
+  // التحقق المباشر من الإيميل اللي طلبته
+  if (user.email === 'Ali@gmail.com') {
+    currentUser = user;
+    loadKpis();
+    loadMatches();
+    loadUsers();
+  } else {
+    alert('ليس لديك صلاحية الدخول للوحة التحكم');
+    location.href = 'index.html';
+  }
+});
       loadKpis();
       loadMatches();
       loadUsers();
