@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم - KORA LIVE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-wrap { display:flex; min-height:100vh; }
+    .sidebar { width:250px; background:var(--bg-2); border-left:1px solid var(--border); padding:20px; }
+    .sidebar a { display:block; padding:12px; border-radius:8px; margin-bottom:6px; color:var(--text-muted); font-weight:600; }
+    .sidebar a:hover, .sidebar a.active { background:var(--card); color:var(--primary); }
+    .admin-main { flex:1; padding:24px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .kpi { background:var(--card); padding:20px; border-radius:14px; border:1px solid var(--border); }
+    .kpi-value { font-size:28px; font-weight:900; color:var(--primary); }
+    .kpi-label { font-size:13px; color:var(--text-muted); }
+    .admin-form { background:var(--card); padding:24px; border-radius:14px; max-width:640px; }
+    .admin-form input, .admin-form select, .admin-form textarea {
+      width:100%; padding:10px 14px; border-radius:10px; background:var(--bg-2);
+      border:1px solid var(--border); color:var(--text); font-family:inherit; margin-bottom:12px;
+    }
+    .admin-form label { font-size:13px; color:var(--text-muted); font-weight:600; margin-bottom:4px; display:block; }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <a href="index.html" class="logo" style="margin-bottom:24px">
+        <span class="logo-icon">⚽</span><span class="logo-text">KORA <b>LIVE</b></span>
+      </a>
+      <a href="#dash" class="active" onclick="showTab('dash',this)">📊 لوحة المعلومات</a>
+      <a href="#matches" onclick="showTab('matches',this)">⚽ المباريات</a>
+      <a href="#news" onclick="showTab('news',this)">📰 الأخبار</a>
+      <a href="#leagues" onclick="showTab('leagues',this)">🏆 الدوريات</a>
+      <a href="#users" onclick="showTab('users',this)">👥 المستخدمون</a>
+      <a href="#notif" onclick="showTab('notif',this)">🔔 الإشعارات</a>
+      <a href="index.html">← العودة للموقع</a>
+    </aside>
+
+    <main class="admin-main">
+      <!-- Dash -->
+      <section id="tab-dash">
+        <h2>لوحة المعلومات</h2>
+        <div class="kpi-grid" id="kpis"></div>
+      </section>
+
+      <!-- Matches -->
+      <section id="tab-matches" style="display:none">
+        <h2>➕ إضافة مباراة</h2>
+        <form class="admin-form" id="addMatchForm">
+          <label>الفريق المضيف</label><input id="homeTeam" required>
+          <label>الفريق الضيف</label><input id="awayTeam" required>
+          <label>الدوري</label><input id="leagueName" required>
+          <label>موعد المباراة</label><input type="datetime-local" id="startTime" required>
+          <label>الحالة</label>
+          <select id="matchStatus">
+            <option value="upcoming">قادمة</option>
+            <option value="live">مباشر</option>
+            <option value="finished">انتهت</option>
+          </select>
+          <button class="btn" type="submit">حفظ المباراة</button>
+        </form>
+        <h2 style="margin-top:32px">📋 المباريات الحالية</h2>
+        <div id="adminMatchesList"></div>
+      </section>
+
+      <!-- News -->
+      <section id="tab-news" style="display:none">
+        <h2>➕ إضافة خبر</h2>
+        <form class="admin-form" id="addNewsForm">
+          <label>العنوان</label><input id="newsTitle" required>
+          <label>الوصف</label><textarea id="newsDesc" rows="3" required></textarea>
+          <label>رابط الصورة (اختياري)</label><input id="newsImage">
+          <label>المصدر</label><input id="newsSource" placeholder="مثال: BBC Sport">
+          <button class="btn" type="submit">نشر الخبر</button>
+        </form>
+      </section>
+
+      <!-- Leagues -->
+      <section id="tab-leagues" style="display:none">
+        <h2>➕ إضافة دوري</h2>
+        <form class="admin-form" id="addLeagueForm">
+          <label>اسم الدوري</label><input id="leagueNameInput" required>
+          <label>الدولة</label><input id="leagueCountry">
+          <label>رابط الشعار</label><input id="leagueLogo">
+          <button class="btn" type="submit">إضافة</button>
+        </form>
+      </section>
+
+      <!-- Users -->
+      <section id="tab-users" style="display:none">
+        <h2>👥 المستخدمون</h2>
+        <div id="usersList">جارٍ التحميل...</div>
+      </section>
+
+      <!-- Notifications -->
+      <section id="tab-notif" style="display:none">
+        <h2>🔔 إرسال إشعار</h2>
+        <form class="admin-form" id="notifForm">
+          <label>العنوان</label><input id="notifTitle" required>
+          <label>الرسالة</label><textarea id="notifBody" rows="3" required></textarea>
+          <button class="btn" type="submit">إرسال للجميع</button>
+        </form>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:12px">
+          * يتطلب Cloud Function (منفصل) لإرسال FCM.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import {
+      collection, addDoc, getDocs, query, orderBy, limit,
+      serverTimestamp, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { location.href = 'login.html'; return; }
+      // تحقق من صلاحية المشرف
+      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+      if (!adminDoc.exists()) {
+        alert('ليس لديك صلاحية الدخول للوحة التحكم');
+        location.href = 'index.html';
+        return;
+      }
+      currentUser = user;
+      loadKpis();
+      loadMatches();
+      loadUsers();
+    });
+
+    window.showTab = (tab, el) => {
+      document.querySelectorAll('main > section').forEach(s => s.style.display='none');
+      document.getElementById('tab-'+tab).style.display='block';
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+    };
+
+    async function loadKpis() {
+      const users = await getDocs(collection(db,'users'));
+      const matches = await getDocs(collection(db,'matches'));
+      const news = await getDocs(collection(db,'news'));
+      document.getElementById('kpis').innerHTML = `
+        <div class="kpi"><div class="kpi-value">${users.size}</div><div class="kpi-label">المستخدمون</div></div>
+        <div class="kpi"><div class="kpi-value">${matches.size}</div><div class="kpi-label">المباريات</div></div>
+        <div class="kpi"><div class="kpi-value">${news.size}</div><div class="kpi-label">الأخبار</div></div>
+      `;
+    }
+
+    async function loadMatches() {
+      const snap = await getDocs(query(collection(db,'matches'), orderBy('startTime','desc'), limit(20)));
+      document.getElementById('adminMatchesList').innerHTML = snap.docs.map(d => {
+        const m = d.data();
+        return `<div class="match-row" style="margin-bottom:8px">
+          <b>${m.homeTeam}</b> ضد <b>${m.awayTeam}</b>
+          <span class="score-box">${m.homeScore??0}-${m.awayScore??0}</span>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:12px"
+            onclick="deleteMatch('${d.id}')">حذف</button>
+        </div>`;
+      }).join('') || '<div class="empty">لا توجد مباريات</div>';
+    }
+
+    async function loadUsers() {
+      const snap = await getDocs(collection(db,'users'));
+      document.getElementById('usersList').innerHTML = snap.docs.map(d => {
+        const u = d.data();
+        return `<div class="match-row" style="margin-bottom:8px">
+          <b>${u.name || '—'}</b>
+          <span style="color:var(--text-muted);font-size:13px">${u.email}</span>
+          <span style="color:var(--primary);font-size:12px">${u.subscription||'free'}</span>
+        </div>`;
+      }).join('') || '<div class="empty">لا يوجد مستخدمون</div>';
+    }
+
+    // Add match
+    document.getElementById('addMatchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db,'matches'), {
+        homeTeam: homeTeam.value,
+        awayTeam: awayTeam.value,
+        leagueName: leagueName.value,
+        startTime: new Date(startTime.value),
+        matchStatus: matchStatus.value,
+        homeScore: 0, awayScore: 0,
+        createdAt: serverTimestamp()
+      });
+      e.target.reset(); loadMatches(); loadKpis();
+      alert('✅ تمت إضافة المباراة');
+    });
+
+    // Add news
+    document.getElementById('addNewsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db,'news'), {
+        title: newsTitle.value,
+        description: newsDesc.value,
+        image: newsImage.value,
+        source: newsSource.value,
+        publishedAt: serverTimestamp()
+      });
+      e.target.reset(); loadKpis();
+      alert('✅ تم نشر الخبر');
+    });
+
+    // Add league
+    document.getElementById('addLeagueForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await addDoc(collection(db,'leagues'), {
+        name: leagueNameInput.value,
+        country: leagueCountry.value,
+        logo: leagueLogo.value,
+        season: new Date().getFullYear() + '/' + (new Date().getFullYear()+1)
+      });
+      e.target.reset();
+      alert('✅ تمت إضافة الدوري');
+    });
+
+    // Delete match
+    window.deleteMatch = async (id) => {
+      if (!confirm('حذف المباراة؟')) return;
+      const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+      await deleteDoc(doc(db,'matches',id));
+      loadMatches();
+    };
+
+    // Notifications
+    document.getElementById('notifForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('⚠️ الإرسال يتطلب Cloud Function منشورًا (راجع توثيق Firebase).');
+    });
+  </script>
+</body>
+</html>
