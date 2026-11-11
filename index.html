@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KORA LIVE - منصة كرة القدم</title>
+  <link rel="icon" href="assets/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">⚽</span>
+        <span class="logo-text">KORA <b>LIVE</b></span>
+      </a>
+      <nav class="nav">
+        <a href="index.html" class="active">الرئيسية</a>
+        <a href="matches.html">المباريات</a>
+        <a href="leagues.html">الدوريات</a>
+        <a href="news.html">الأخبار</a>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="notifBtn">🔔</button>
+        <a href="profile.html" class="icon-btn" id="userBtn">👤</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1>تابع كرة القدم <span class="accent">مباشرة</span></h1>
+      <p>نتائج لحظية · إحصائيات دقيقة · أخبار موثوقة</p>
+    </div>
+  </section>
+
+  <!-- Live Matches -->
+  <section class="section container">
+    <div class="section-head">
+      <h2>🔴 مباريات مباشرة</h2>
+      <a href="matches.html" class="link">عرض الكل</a>
+    </div>
+    <div id="liveMatches" class="matches-grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </section>
+
+  <!-- Today's Matches -->
+  <section class="section container">
+    <div class="section-head">
+      <h2>📅 مباريات اليوم</h2>
+      <a href="matches.html" class="link">عرض الكل</a>
+    </div>
+    <div id="todayMatches" class="matches-list"></div>
+  </section>
+
+  <!-- News -->
+  <section class="section container">
+    <div class="section-head">
+      <h2>📰 أهم الأخبار</h2>
+      <a href="news.html" class="link">عرض الكل</a>
+    </div>
+    <div id="homeNews" class="news-grid"></div>
+  </section>
+
+  <!-- Leagues -->
+  <section class="section container">
+    <div class="section-head"><h2>🏆 الدوريات</h2></div>
+    <div id="homeLeagues" class="leagues-row"></div>
+  </section>
+
+  <!-- Banner Ad -->
+  <div class="container">
+    <div class="ad-banner" id="adBanner">مساحة إعلانية</div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 KORA LIVE — جميع الحقوق محفوظة</p>
+      <div class="footer-links">
+        <a href="#">سياسة الخصوصية</a>
+        <a href="#">شروط الاستخدام</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
